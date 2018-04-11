@@ -99,9 +99,20 @@ public final class Board extends Pane {
 		// Adding default pieces ~ this can only be done after entityMap is set and,
 		// therefore, can't be done during object initialization.
 
+		// blue pieces in top left
 		put(new BoardEntity(Type.BLUE_PIECE), 0, 0);// This is NOT the first square, since board indices start @ 0.
 		put(new BoardEntity(Type.BLUE_PIECE), 0, 1);
 		put(new BoardEntity(Type.BLUE_PIECE), 1, 0);
+
+		// white pieces in bottom left
+		put(new BoardEntity(Type.WHITE_PIECE), size - 1, 0);
+		put(new BoardEntity(Type.WHITE_PIECE), size - 2, 0);
+		put(new BoardEntity(Type.WHITE_PIECE), size - 1, 1);
+
+		// red pieces in bottom right
+		put(new BoardEntity(Type.RED_PIECE), size - 1, size - 1);
+		put(new BoardEntity(Type.RED_PIECE), size - 2, size - 1);
+		put(new BoardEntity(Type.RED_PIECE), size - 1, size - 2);
 
 	}
 
@@ -136,8 +147,8 @@ public final class Board extends Pane {
 	private void setPos(BoardEntity entity, int row, int col) {
 		// Every time these methods are called, the previous binds are overridden. (I
 		// think.)
-		entity.icon.layoutXProperty().bind(widthProperty.multiply(row).divide(getBoardSize()));
-		entity.icon.layoutYProperty().bind(heightProperty.multiply(col).divide(getBoardSize()));
+		entity.icon.layoutXProperty().bind(widthProperty.multiply(col).divide(getBoardSize()));
+		entity.icon.layoutYProperty().bind(heightProperty.multiply(row).divide(getBoardSize()));
 	}
 
 }
