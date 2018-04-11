@@ -1,5 +1,6 @@
 package org.alixia.games.diplomacy;
 
+import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
@@ -38,11 +39,16 @@ public class BoardEntity {
 	protected final ImageView icon = new ImageView();
 
 	{
-		icon.getProperties().put(BOARD_ENTITY_IMAGE_VIEW_KEY, BOARD_ENTITY_IMAGE_VIEW_KEY);
+		icon.getProperties().put(BOARD_ENTITY_IMAGE_VIEW_KEY, this);
+
 	}
 
 	public static boolean isBoardEntityImageView(ImageView n) {
 		return n.getProperties().containsKey(BOARD_ENTITY_IMAGE_VIEW_KEY);
+	}
+
+	public static BoardEntity getBoardEntity(Node n) throws ClassCastException {
+		return (BoardEntity) n.getProperties().get(BOARD_ENTITY_IMAGE_VIEW_KEY);
 	}
 
 }
