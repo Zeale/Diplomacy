@@ -1,5 +1,9 @@
 package org.alixia.games.diplomacy;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 import org.alixia.games.diplomacy.BoardEntity.Type;
@@ -91,6 +95,15 @@ public final class Board extends Pane {
 		});
 	}
 
+	protected final List<BoardEntity> getEntities() {
+		List<BoardEntity> entities = new LinkedList<>();
+		for (BoardEntity[] beArr : entityMap)
+			for (BoardEntity be : beArr)
+				entities.add(be);
+
+		return Collections.unmodifiableList(entities);
+	}
+
 	// Setting sizing for images
 	{
 		grid.fitHeightProperty().bind(heightProperty);
@@ -135,6 +148,11 @@ public final class Board extends Pane {
 	private Board(int size) {
 		entityMap = new BoardEntity[size][size];
 
+		initBoard();
+
+	}
+
+	protected void initBoard() {
 		// Adding default pieces ~ this can only be done after entityMap is set and,
 		// therefore, can't be done during object initialization.
 
@@ -144,15 +162,19 @@ public final class Board extends Pane {
 		put(new BoardEntity(Type.BLUE_PIECE), 1, 0);
 
 		// white pieces in bottom left
-		put(new BoardEntity(Type.WHITE_PIECE), size - 1, 0);
-		put(new BoardEntity(Type.WHITE_PIECE), size - 2, 0);
-		put(new BoardEntity(Type.WHITE_PIECE), size - 1, 1);
+		put(new BoardEntity(Type.WHITE_PIECE), getBoardSize() - 1, 0);
+		put(new BoardEntity(Type.WHITE_PIECE), getBoardSize() - 2, 0);
+		put(new BoardEntity(Type.WHITE_PIECE), getBoardSize() - 1, 1);
 
 		// red pieces in bottom right
-		put(new BoardEntity(Type.RED_PIECE), size - 1, size - 1);
-		put(new BoardEntity(Type.RED_PIECE), size - 2, size - 1);
-		put(new BoardEntity(Type.RED_PIECE), size - 1, size - 2);
+		put(new BoardEntity(Type.RED_PIECE), getBoardSize() - 1, getBoardSize() - 1);
+		put(new BoardEntity(Type.RED_PIECE), getBoardSize() - 2, getBoardSize() - 1);
+		put(new BoardEntity(Type.RED_PIECE), getBoardSize() - 1, getBoardSize() - 2);
 
+	}
+
+	protected enum Team {
+		RED, WHITE, BLUE;
 	}
 
 	protected void swap(int row0, int col0, int row1, int col1) {
@@ -281,9 +303,10 @@ public final class Board extends Pane {
 		if (getSelectedEntity() == entity)
 			unselectEntity();
 		else {
-			if (isEntitySelected())
+			if (isEntitySelected()) {
 				swap(getSelectedEntity(), entity);
-			else
+				unselectEntity();
+			} else
 				selectEntity(entity);
 		}
 
@@ -305,8 +328,10 @@ public final class Board extends Pane {
 			if (!hasEntity(row, col)) {
 				put(getSelectedEntity(), row, col);
 				unselectEntity();
-			} else
+			} else {
 				swap(getSelectedEntity(), getEntity(row, col));
+				unselectEntity();
+			}
 
 	}
 
