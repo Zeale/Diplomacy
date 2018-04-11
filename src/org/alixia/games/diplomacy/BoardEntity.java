@@ -12,10 +12,9 @@ public class BoardEntity {
 	private static final Object BOARD_ENTITY_IMAGE_VIEW_KEY = new Object();
 
 	public enum Type {
-		// TODO Unclaimed tower
 		RED_PIECE("pieces/red_piece.png"), BLUE_PIECE("pieces/blue_piece.png"), WHITE_PIECE(
 				"pieces/white_piece.png"), RED_TOWER("towers/red_tower.png"), BLUE_TOWER(
-						"towers/blue_tower.png"), WHITE_TOWER("towers/white_tower.png");
+						"towers/blue_tower.png"), WHITE_TOWER("towers/white_tower.png"),UNCLAIMED_TOWER("towers/unclaimed_tower.png");
 		private Type(String subLoc) {
 			image = new Image("/org/alixia/games/diplomacy/_resources/graphics/" + subLoc);
 		}
