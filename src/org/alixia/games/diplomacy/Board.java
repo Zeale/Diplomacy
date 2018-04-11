@@ -41,8 +41,9 @@ public final class Board extends Pane {
 								img.fitHeightProperty().bind(heightProperty.divide(getBoardSize()));
 
 								EventHandler<MouseEvent> handler = event -> {
+									BoardEntity clickedEntity = BoardEntity.getBoardEntity(n);
 									if (event.getButton().equals(MouseButton.PRIMARY))
-										handleEntityClickEvent(event, BoardEntity.getBoardEntity(n));
+										handleEntityClicked(event, clickedEntity);
 								};
 								n.addEventFilter(MouseEvent.MOUSE_CLICKED, handler);
 
@@ -87,7 +88,6 @@ public final class Board extends Pane {
 			if (event.getButton().equals(MouseButton.PRIMARY))
 				handleBoardClicked(event, (int) (event.getSceneY() / heightProperty.get() * getBoardSize()),
 						(int) (event.getSceneX() / widthProperty.get() * getBoardSize()));
-
 		});
 	}
 
@@ -155,6 +155,34 @@ public final class Board extends Pane {
 
 	}
 
+	protected void swap(int row0, int col0, int row1, int col1) {
+		put(put(getEntity(row0, col0), row1, col1), row0, col0);
+	}
+
+	protected void swap(BoardEntity first, BoardEntity second) {
+		swap(getRow(first), getCol(first), getRow(second), getCol(second));
+	}
+
+	protected int getRow(BoardEntity entity) {
+		for (int i = 0; i < entityMap.length; i++) {
+			for (int j = 0; j < entityMap[i].length; j++) {
+				if (entityMap[i][j] == entity)
+					return i;
+			}
+		}
+		return -1;
+	}
+
+	protected int getCol(BoardEntity entity) {
+		for (int i = 0; i < entityMap.length; i++) {
+			for (int j = 0; j < entityMap[i].length; j++) {
+				if (entityMap[i][j] == entity)
+					return i = j;
+			}
+		}
+		return -1;
+	}
+
 	public Board() {
 		this(8);
 	}
@@ -181,6 +209,10 @@ public final class Board extends Pane {
 		if (previousEntity != null)
 			getChildren().remove(previousEntity.icon);
 
+		// Remove new entity from its previous position.
+		if (containsEntity(entity))
+			entityMap[getRow(entity)][getCol(entity)] = null;
+
 		// Add new entity to board.
 		entityMap[row][col] = entity;
 		if (!getChildren().contains(entity.icon))
@@ -197,6 +229,10 @@ public final class Board extends Pane {
 		// think.)
 		entity.icon.layoutXProperty().bind(widthProperty.multiply(col).divide(getBoardSize()));
 		entity.icon.layoutYProperty().bind(heightProperty.multiply(row).divide(getBoardSize()));
+	}
+
+	protected boolean containsEntity(BoardEntity entity) {
+		return getRow(entity) != -1;
 	}
 
 	/*
@@ -240,12 +276,16 @@ public final class Board extends Pane {
 		return currEntity;
 	}
 
-	protected void handleEntityClickEvent(MouseEvent event, BoardEntity entity) {
+	protected void handleEntityClicked(MouseEvent event, BoardEntity entity) {
 		// Testing code
 		if (getSelectedEntity() == entity)
 			unselectEntity();
-		else
-			selectEntity(entity);
+		else {
+			if (isEntitySelected())
+				swap(getSelectedEntity(), entity);
+			else
+				selectEntity(entity);
+		}
 
 		// if(selectedEntity.getType()==Type.RED)// Or something better to get a type,
 		// specifically, something that acknowledges that subclass types can exist.
@@ -265,7 +305,8 @@ public final class Board extends Pane {
 			if (!hasEntity(row, col)) {
 				put(getSelectedEntity(), row, col);
 				unselectEntity();
-			}
+			} else
+				swap(getSelectedEntity(), getEntity(row, col));
 
 	}
 
