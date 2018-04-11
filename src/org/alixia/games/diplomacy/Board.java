@@ -7,17 +7,30 @@ import org.alixia.games.diplomacy.BoardEntity.Type;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ListChangeListener;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Effect;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 
 public final class Board extends Pane {
 
-	// Update piece sizes when added
+	private static final DropShadow DEFAULT_SELECTION_EFFECT = new DropShadow(80, Color.GOLD);// Impl constant ~ see
+																								// below
+
+	private final Object BOARD_ENTITY_CLICK_EVENT_HANDLER_KEY = new Object();
+
+	// Configure BoardEntities' image views to work with this board.
 	{
+		// TODO Add checkup to see if an image view is already bound to another board.
 		getChildren().addListener(new ListChangeListener<Node>() {
 
 			@Override
+			@SuppressWarnings("unchecked")
 			public void onChanged(Change<? extends Node> c) {
 				while (c.next())
 					if (c.wasAdded())
@@ -26,6 +39,15 @@ public final class Board extends Pane {
 								ImageView img = (ImageView) n;
 								img.fitWidthProperty().bind(widthProperty.divide(getBoardSize()));
 								img.fitHeightProperty().bind(heightProperty.divide(getBoardSize()));
+
+								EventHandler<MouseEvent> handler = event -> {
+									if (event.getButton().equals(MouseButton.PRIMARY))
+										handleEntityClickEvent(event, BoardEntity.getBoardEntity(n));
+								};
+								n.addEventFilter(MouseEvent.MOUSE_CLICKED, handler);
+
+								n.getProperties().put(BOARD_ENTITY_CLICK_EVENT_HANDLER_KEY, handler);
+
 							} else
 								;
 					else
@@ -41,16 +63,33 @@ public final class Board extends Pane {
 
 								n.layoutXProperty().unbind();
 								n.layoutYProperty().unbind();
+
+								// And remove event handlers
+								n.removeEventFilter(MouseEvent.MOUSE_CLICKED, (EventHandler<MouseEvent>) n
+										.getProperties().remove(BOARD_ENTITY_CLICK_EVENT_HANDLER_KEY));
+
 							}
 			}
 		});
+
 	}
 
-	private DoubleProperty widthProperty = new SimpleDoubleProperty(), heightProperty = new SimpleDoubleProperty();
+	private final DoubleProperty widthProperty = new SimpleDoubleProperty(),
+			heightProperty = new SimpleDoubleProperty();
 
 	private final ImageView grid = new ImageView("/org/alixia/games/diplomacy/_resources/graphics/grid.png"),
 			background = new ImageView("/org/alixia/games/diplomacy/_resources/graphics/bg.png"),
 			hit_tint = new ImageView("/org/alixia/games/diplomacy/_resources/graphics/frame_dmg.png");
+
+	// Setup pane to distribute mouse events to handler methods
+	{
+		addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+			if (event.getButton().equals(MouseButton.PRIMARY))
+				handleBoardClicked(event, (int) (event.getSceneY() / heightProperty.get() * getBoardSize()),
+						(int) (event.getSceneX() / widthProperty.get() * getBoardSize()));
+
+		});
+	}
 
 	// Setting sizing for images
 	{
@@ -149,6 +188,56 @@ public final class Board extends Pane {
 		// think.)
 		entity.icon.layoutXProperty().bind(widthProperty.multiply(col).divide(getBoardSize()));
 		entity.icon.layoutYProperty().bind(heightProperty.multiply(row).divide(getBoardSize()));
+	}
+
+	/*
+	 * Board implementation code
+	 * 
+	 * The following code should act as if it is a subclass implementing Board (and,
+	 * honestly should be written in a subclass). It must, therefore, not access any
+	 * private methods above this comment. You know, the general implementation
+	 * contract...
+	 * 
+	 * This impl code can still be overridden by subclasses to provide more features
+	 * & stuff.
+	 */
+
+	protected Effect getSelectionEffect() {
+		return DEFAULT_SELECTION_EFFECT;
+	}
+
+	private BoardEntity selectedEntity;
+
+	protected BoardEntity selectEntity(BoardEntity entity) {
+		if (entity != null)
+			entity.icon.setEffect(getSelectionEffect());
+
+		BoardEntity currEntity = unselectEntity();
+		selectedEntity = entity;
+		return currEntity;
+	}
+
+	protected BoardEntity unselectEntity() {
+		if (selectedEntity != null)
+			selectedEntity.icon.setEffect(null);
+		BoardEntity currEntity = selectedEntity;
+		selectedEntity = null;
+		return currEntity;
+	}
+
+	protected void handleEntityClickEvent(MouseEvent event, BoardEntity entity) {
+		// Testing code
+		selectEntity(entity);
+
+		// if(selectedEntity.getType()==Type.RED)// Or something better to get a type,
+		// specifically, something that acknowledges that subclass types can exist.
+
+	}
+
+	protected void handleBoardClicked(MouseEvent event, int row, int col) {
+		// Debug code
+		// System.out.println("Board Clicked @ [row=" + (row + 1) + ", col=" + (col + 1)
+		// + "]");
 	}
 
 }
