@@ -163,7 +163,15 @@ public final class Board extends Pane {
 		return row > entityMap.length || row < 0 || col > entityMap.length || col < 0;
 	}
 
-	public BoardEntity put(BoardEntity entity, int row, int col) {
+	protected boolean hasEntity(int row, int col) {
+		return getEntity(row, col) != null;
+	}
+
+	protected BoardEntity getEntity(int row, int col) {
+		return entityMap[row][col];
+	}
+
+	protected BoardEntity put(BoardEntity entity, int row, int col) {
 		Objects.requireNonNull(entity);
 		if (outsideBorders(row, col))
 			throw new RuntimeException("Position outside of board borders.");
@@ -175,7 +183,8 @@ public final class Board extends Pane {
 
 		// Add new entity to board.
 		entityMap[row][col] = entity;
-		getChildren().add(entity.icon);
+		if (!getChildren().contains(entity.icon))
+			getChildren().add(entity.icon);
 
 		setPos(entity, row, col);
 
@@ -209,12 +218,18 @@ public final class Board extends Pane {
 	private BoardEntity selectedEntity;
 
 	protected BoardEntity selectEntity(BoardEntity entity) {
+		if (entity == selectedEntity)
+			return selectedEntity;
 		if (entity != null)
 			entity.icon.setEffect(getSelectionEffect());
 
 		BoardEntity currEntity = unselectEntity();
 		selectedEntity = entity;
 		return currEntity;
+	}
+
+	protected boolean isEntitySelected() {
+		return selectedEntity != null;
 	}
 
 	protected BoardEntity unselectEntity() {
@@ -227,17 +242,31 @@ public final class Board extends Pane {
 
 	protected void handleEntityClickEvent(MouseEvent event, BoardEntity entity) {
 		// Testing code
-		selectEntity(entity);
+		if (getSelectedEntity() == entity)
+			unselectEntity();
+		else
+			selectEntity(entity);
 
 		// if(selectedEntity.getType()==Type.RED)// Or something better to get a type,
 		// specifically, something that acknowledges that subclass types can exist.
 
 	}
 
+	protected BoardEntity getSelectedEntity() {
+		return selectedEntity;
+	}
+
 	protected void handleBoardClicked(MouseEvent event, int row, int col) {
 		// Debug code
 		// System.out.println("Board Clicked @ [row=" + (row + 1) + ", col=" + (col + 1)
 		// + "]");
+
+		if (isEntitySelected() && getSelectedEntity() != getEntity(row, col))
+			if (!hasEntity(row, col)) {
+				put(getSelectedEntity(), row, col);
+				unselectEntity();
+			}
+
 	}
 
 }
