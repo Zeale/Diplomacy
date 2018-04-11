@@ -1,6 +1,5 @@
 package org.alixia.games.diplomacy;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -99,7 +98,8 @@ public final class Board extends Pane {
 		List<BoardEntity> entities = new LinkedList<>();
 		for (BoardEntity[] beArr : entityMap)
 			for (BoardEntity be : beArr)
-				entities.add(be);
+				if (be != null)
+					entities.add(be);
 
 		return Collections.unmodifiableList(entities);
 	}
@@ -171,10 +171,58 @@ public final class Board extends Pane {
 		put(new BoardEntity(Type.RED_PIECE), getBoardSize() - 2, getBoardSize() - 1);
 		put(new BoardEntity(Type.RED_PIECE), getBoardSize() - 1, getBoardSize() - 2);
 
+		nextTurn();
+
+	}
+
+	private Team currentTeam;
+
+	protected void selectTeam(Team team) {
+		if (currentTeam != null)
+			for (BoardEntity be : getEntities())
+				if (be.getType() == currentTeam.boardEntityType)
+					be.removeEffect(currentTeam.selectionEffect);
+		currentTeam = team;
+		for (BoardEntity be : getEntities())
+			if (be.getType() == team.boardEntityType)
+				be.setEffect(team.selectionEffect);
+	}
+
+	protected void nextTurn() {
+		if (currentTeam == null) {
+			selectTeam(Team.RED);
+			return;
+		}
+
+		Team[] teams = Team.values();
+		int point = currentTeam.ordinal();
+		if (point == teams.length)
+			point = 0;
+
+		selectTeam(teams[point]);
 	}
 
 	protected enum Team {
-		RED, WHITE, BLUE;
+
+		RED(BoardEntity.Type.RED_PIECE, Color.RED), BLUE(BoardEntity.Type.BLUE_PIECE,
+				Color.BLUE), WHITE(BoardEntity.Type.WHITE_PIECE, Color.WHITE);
+
+		private final BoardEntity.Type boardEntityType;
+		private final DropShadow selectionEffect = new DropShadow();
+
+		{
+			selectionEffect.setRadius(80);
+		}
+
+		private Team(Type boardEntityType, Color shadowColor) {
+			this.boardEntityType = boardEntityType;
+			selectionEffect.setColor(shadowColor);
+		}
+
+		public BoardEntity.Type getBoardEntityType() {
+			return boardEntityType;
+		}
+
 	}
 
 	protected void swap(int row0, int col0, int row1, int col1) {
@@ -279,7 +327,7 @@ public final class Board extends Pane {
 		if (entity == selectedEntity)
 			return selectedEntity;
 		if (entity != null)
-			entity.icon.setEffect(getSelectionEffect());
+			entity.setEffect(getSelectionEffect());
 
 		BoardEntity currEntity = unselectEntity();
 		selectedEntity = entity;
@@ -292,7 +340,7 @@ public final class Board extends Pane {
 
 	protected BoardEntity unselectEntity() {
 		if (selectedEntity != null)
-			selectedEntity.icon.setEffect(null);
+			selectedEntity.removeEffect(DEFAULT_SELECTION_EFFECT);
 		BoardEntity currEntity = selectedEntity;
 		selectedEntity = null;
 		return currEntity;

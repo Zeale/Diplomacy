@@ -1,6 +1,9 @@
 package org.alixia.games.diplomacy;
 
+import java.util.Stack;
+
 import javafx.scene.Node;
+import javafx.scene.effect.Effect;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
@@ -29,18 +32,15 @@ public final class BoardEntity {
 	}
 
 	public BoardEntity(Type type) {
-		this(type.image);
+		this.type = type;
+		icon.setImage(type.image);
 	}
 
-	protected BoardEntity(Image image) {
-		icon.setImage(image);
-	}
-
+	private final Type type;
 	protected final ImageView icon = new ImageView();
 
 	{
 		icon.getProperties().put(BOARD_ENTITY_IMAGE_VIEW_KEY, this);
-
 	}
 
 	public static boolean isBoardEntityImageView(ImageView n) {
@@ -49,6 +49,22 @@ public final class BoardEntity {
 
 	public static BoardEntity getBoardEntity(Node n) throws ClassCastException {
 		return (BoardEntity) n.getProperties().get(BOARD_ENTITY_IMAGE_VIEW_KEY);
+	}
+
+	public Type getType() {
+		return type;
+	}
+
+	private final Stack<Effect> effectQueue = new Stack<>();
+
+	public void setEffect(Effect effect) {
+		effectQueue.push(effect);
+		icon.setEffect(effectQueue.isEmpty() ? null : effectQueue.peek());
+	}
+
+	public void removeEffect(Effect effect) {
+		effectQueue.remove(effect);
+		icon.setEffect(effectQueue.isEmpty() ? null : effectQueue.peek());
 	}
 
 }
