@@ -27,7 +27,11 @@ public class BoardEntity {
 	}
 
 	public BoardEntity(Type type) {
-		icon.setImage(type.image);
+		this(type.image);
+	}
+
+	protected BoardEntity(Image image) {
+		icon.setImage(image);
 	}
 
 	protected final ImageView icon = new ImageView();
