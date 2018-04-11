@@ -4,7 +4,7 @@ import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class BoardEntity {
+public final class BoardEntity {
 
 	/**
 	 * Used to determine if any arbitrarily obtained {@link ImageView} belongs to a
