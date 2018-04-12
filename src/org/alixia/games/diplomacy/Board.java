@@ -155,17 +155,17 @@ public final class Board extends Pane {
 		// therefore, can't be done during object initialization.
 
 		// blue pieces in top left
-		put(new BoardEntity(Type.BLUE_PIECE), 0, 0);// This is NOT the first square, since board indices start @ 0.
+		put(new BoardEntity(Type.BLUE_TOWER), 0, 0);// This is NOT the first square, since board indices start @ 0.
 		put(new BoardEntity(Type.BLUE_PIECE), 0, 1);
 		put(new BoardEntity(Type.BLUE_PIECE), 1, 0);
 
 		// white pieces in bottom left
-		put(new BoardEntity(Type.WHITE_PIECE), getBoardSize() - 1, 0);
+		put(new BoardEntity(Type.WHITE_TOWER), getBoardSize() - 1, 0);
 		put(new BoardEntity(Type.WHITE_PIECE), getBoardSize() - 2, 0);
 		put(new BoardEntity(Type.WHITE_PIECE), getBoardSize() - 1, 1);
 
 		// red pieces in bottom right
-		put(new BoardEntity(Type.RED_PIECE), getBoardSize() - 1, getBoardSize() - 1);
+		put(new BoardEntity(Type.RED_TOWER), getBoardSize() - 1, getBoardSize() - 1);
 		put(new BoardEntity(Type.RED_PIECE), getBoardSize() - 2, getBoardSize() - 1);
 		put(new BoardEntity(Type.RED_PIECE), getBoardSize() - 1, getBoardSize() - 2);
 
