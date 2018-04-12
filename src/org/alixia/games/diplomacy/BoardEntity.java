@@ -20,15 +20,27 @@ public final class BoardEntity {
 
 	public enum Type {
 		RED_PIECE("pieces/red_piece.png"), BLUE_PIECE("pieces/blue_piece.png"), WHITE_PIECE(
-				"pieces/white_piece.png"), RED_TOWER("towers/red_tower.png"), BLUE_TOWER(
-						"towers/blue_tower.png"), WHITE_TOWER(
-								"towers/white_tower.png"), UNCLAIMED_TOWER("towers/unclaimed_tower.png");
+				"pieces/white_piece.png"), RED_TOWER("towers/red_tower.png", true), BLUE_TOWER("towers/blue_tower.png",
+						true), WHITE_TOWER("towers/white_tower.png",
+								true), UNCLAIMED_TOWER("towers/unclaimed_tower.png", true);
 		private Type(String subLoc) {
-			image = new Image("/org/alixia/games/diplomacy/_resources/graphics/" + subLoc);
+			this(subLoc, false);
 		}
+
+		private Type(String subLoc, boolean tower) {
+			image = new Image("/org/alixia/games/diplomacy/_resources/graphics/" + subLoc);
+			this.tower = tower;
+		}
+
+		private final boolean tower;
 
 		private Type(Image image) {
 			this.image = image;
+			tower = false;
+		}
+
+		public boolean isTower() {
+			return tower;
 		}
 
 		private final Image image;

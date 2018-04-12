@@ -182,12 +182,14 @@ public final class Board extends Pane {
 	protected void selectTeam(Team team) {
 		if (currentTeam != null)
 			for (BoardEntity be : getEntities())
-				if (be.getType() == currentTeam.boardEntityType)
-					be.deselectTeam();
+				for (BoardEntity.Type be_t : getCurrentTeam().getBoardEntityTypes())
+					if (be.getType() == be_t)
+						be.deselectTeam();
 		currentTeam = team;
 		for (BoardEntity be : getEntities())
-			if (be.getType() == team.boardEntityType)
-				be.selectTeam(team);
+			for (BoardEntity.Type be_t : team.getBoardEntityTypes())
+				if (be.getType() == be_t)
+					be.selectTeam(team);
 	}
 
 	protected void nextTurn() {
@@ -204,10 +206,11 @@ public final class Board extends Pane {
 
 	protected enum Team {
 
-		RED(BoardEntity.Type.RED_PIECE, Color.RED), WHITE(BoardEntity.Type.WHITE_PIECE,
-				Color.WHITE), BLUE(BoardEntity.Type.BLUE_PIECE, Color.BLUE);
+		RED(Color.RED, BoardEntity.Type.RED_PIECE, BoardEntity.Type.RED_TOWER), WHITE(Color.WHITE,
+				BoardEntity.Type.WHITE_PIECE, BoardEntity.Type.WHITE_TOWER), BLUE(Color.BLUE,
+						BoardEntity.Type.BLUE_PIECE, BoardEntity.Type.BLUE_TOWER);
 
-		private final BoardEntity.Type boardEntityType;
+		private final BoardEntity.Type[] boardEntityTypes;
 		private final DropShadow selectionEffect = new DropShadow();
 
 		public DropShadow getSelectionEffect() {
@@ -218,13 +221,13 @@ public final class Board extends Pane {
 			selectionEffect.setRadius(80);
 		}
 
-		private Team(Type boardEntityType, Color shadowColor) {
-			this.boardEntityType = boardEntityType;
+		private Team(Color shadowColor, BoardEntity.Type... types) {
+			boardEntityTypes = types;
 			selectionEffect.setColor(shadowColor);
 		}
 
-		public BoardEntity.Type getBoardEntityType() {
-			return boardEntityType;
+		public BoardEntity.Type[] getBoardEntityTypes() {
+			return boardEntityTypes;
 		}
 
 	}
@@ -351,22 +354,40 @@ public final class Board extends Pane {
 	}
 
 	protected void handleEntityClicked(MouseEvent event, BoardEntity entity) {
-		// Testing code
+
 		if (getSelectedEntity() == entity)
 			unselectEntity();
-		else {
-			if (isEntitySelected()) {
-				swap(getSelectedEntity(), entity);
-				unselectEntity();
-				nextTurn();
-				System.out.println(currentTeam);
-			} else if (entity.getType() == getCurrentTeam().boardEntityType) {
-				selectEntity(entity);
-			}
-		}
+		else if (isEntitySelected()) {
 
-		// if(selectedEntity.getType()==Type.RED)// Or something better to get a type,
-		// specifically, something that acknowledges that subclass types can exist.
+			BoardEntity selectedEntity = getSelectedEntity();
+
+			if (selectedEntity.getType().isTower()) {
+				Type pieceType;
+				switch (selectedEntity.getType()) {
+				case RED_TOWER:
+					pieceType = Type.RED_PIECE;
+					break;
+				case BLUE_TOWER:
+					pieceType = Type.BLUE_PIECE;
+					break;
+				case WHITE_TOWER:
+					pieceType = Type.WHITE_PIECE;
+					break;
+				// Should never happen
+				default:
+					pieceType = Type.UNCLAIMED_TOWER;
+				}
+				put(new BoardEntity(Type.UNCLAIMED_TOWER), getRow(selectedEntity), getCol(selectedEntity));
+				put(new BoardEntity(pieceType), getRow(entity), getCol(entity));
+			} else {
+				put(getSelectedEntity(), getRow(entity), getCol(entity));
+			}
+			nextTurn();
+			unselectEntity();
+		} else
+			for (BoardEntity.Type be_t : getCurrentTeam().getBoardEntityTypes())
+				if (be_t == entity.getType())
+					selectEntity(entity);
 
 	}
 
@@ -376,16 +397,32 @@ public final class Board extends Pane {
 
 	protected void handleBoardClicked(MouseEvent event, int row, int col) {
 
-		// Debug code
-		// System.out.println("Board Clicked @ [row=" + (row + 1) + ", col=" + (col + 1)
-		// + "]");
+		if (hasEntity(row, col))
+			return;
 
-		if (isEntitySelected())
-			if (!hasEntity(row, col)) {
-				put(getSelectedEntity(), row, col);
-				unselectEntity();
-				nextTurn();
+		if (isEntitySelected() && getSelectedEntity().getType().isTower()) {
+			Type piece;
+			switch (getSelectedEntity().getType()) {
+			case RED_TOWER:
+				piece = Type.RED_PIECE;
+				break;
+			case BLUE_TOWER:
+				piece = Type.BLUE_PIECE;
+				break;
+			case WHITE_TOWER:
+				piece = Type.WHITE_PIECE;
+				break;
+			// Should never happen
+			default:
+				piece = Type.UNCLAIMED_TOWER;
 			}
+			put(new BoardEntity(Type.UNCLAIMED_TOWER), getRow(getSelectedEntity()), getCol(getSelectedEntity()));
+			put(new BoardEntity(piece), row, col);
+		} else
+			put(getSelectedEntity(), row, col);
+
+		unselectEntity();
+		nextTurn();
 
 	}
 
