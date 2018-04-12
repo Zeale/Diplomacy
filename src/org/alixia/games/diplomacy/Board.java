@@ -204,8 +204,8 @@ public final class Board extends Pane {
 
 	protected enum Team {
 
-		RED(BoardEntity.Type.RED_PIECE, Color.RED), BLUE(BoardEntity.Type.BLUE_PIECE,
-				Color.BLUE), WHITE(BoardEntity.Type.WHITE_PIECE, Color.WHITE);
+		RED(BoardEntity.Type.RED_PIECE, Color.RED), WHITE(BoardEntity.Type.WHITE_PIECE,
+				Color.WHITE), BLUE(BoardEntity.Type.BLUE_PIECE, Color.BLUE);
 
 		private final BoardEntity.Type boardEntityType;
 		private final DropShadow selectionEffect = new DropShadow();
