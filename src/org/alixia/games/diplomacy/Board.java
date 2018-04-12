@@ -90,6 +90,8 @@ public final class Board extends Pane {
 				handleBoardClicked(event, (int) (event.getSceneY() / heightProperty.get() * getBoardSize()),
 						(int) (event.getSceneX() / widthProperty.get() * getBoardSize()));
 		});
+
+		addEventHandler(MouseEvent.MOUSE_MOVED, this::handleMouseMove);
 	}
 
 	protected final List<BoardEntity> getEntities() {
@@ -200,8 +202,68 @@ public final class Board extends Pane {
 
 		Team[] teams = Team.values();
 		int point = currentTeam.ordinal();
+		if (++point == teams.length) {
+			point = 0;
+			nextRound();
+		}
 
-		selectTeam(teams[point + 1 == teams.length ? 0 : point + 1]);
+		selectTeam(teams[point]);
+
+		if (startPlacingPieces) {
+			BoardEntity entity;
+			switch (getCurrentTeam()) {
+			case RED:
+				entity = new BoardEntity(Type.RED_PIECE);
+				break;
+			case WHITE:
+				entity = new BoardEntity(Type.WHITE_PIECE);
+				break;
+			case BLUE:
+				entity = new BoardEntity(Type.BLUE_PIECE);
+				break;
+			default:
+				entity = new BoardEntity(Type.RED_PIECE);
+			}
+			queuePiecePlace(entity);
+		}
+
+	}
+
+	protected void nextRound() {
+		startPlacingPieces = true;
+	}
+
+	private boolean startPlacingPieces = false;
+
+	protected void queuePiecePlace(BoardEntity piece) {
+		if (isPieceQueued())
+			unQueuePiece();
+		piece.icon.setOpacity(0.35);
+		piece.icon.setMouseTransparent(true);
+		getChildren().add(piece.icon);
+		queuedPiece = piece;
+	}
+
+	private BoardEntity queuedPiece;
+
+	protected boolean isPieceQueued() {
+		return queuedPiece != null;
+	}
+
+	protected BoardEntity unQueuePiece() {
+		BoardEntity entity = queuedPiece;
+		queuedPiece = null;
+		getChildren().remove(entity.icon);
+		entity.icon.setLayoutX(0);
+		entity.icon.setLayoutY(0);
+		return entity;
+	}
+
+	private void handleMouseMove(MouseEvent event) {
+		if (!isPieceQueued())
+			return;
+		queuedPiece.icon.setLayoutX(event.getSceneX() - queuedPiece.icon.getFitWidth() / 2);
+		queuedPiece.icon.setLayoutY(event.getSceneY() - queuedPiece.icon.getFitHeight() / 2);
 	}
 
 	protected enum Team {
@@ -400,29 +462,30 @@ public final class Board extends Pane {
 		if (hasEntity(row, col))
 			return;
 
-		if (isEntitySelected() && getSelectedEntity().getType().isTower()) {
-			Type piece;
-			switch (getSelectedEntity().getType()) {
-			case RED_TOWER:
-				piece = Type.RED_PIECE;
-				break;
-			case BLUE_TOWER:
-				piece = Type.BLUE_PIECE;
-				break;
-			case WHITE_TOWER:
-				piece = Type.WHITE_PIECE;
-				break;
-			// Should never happen
-			default:
-				piece = Type.UNCLAIMED_TOWER;
-			}
-			put(new BoardEntity(Type.UNCLAIMED_TOWER), getRow(getSelectedEntity()), getCol(getSelectedEntity()));
-			put(new BoardEntity(piece), row, col);
-		} else
-			put(getSelectedEntity(), row, col);
-
-		unselectEntity();
-		nextTurn();
+		if (isEntitySelected()) {
+			if (getSelectedEntity().getType().isTower()) {
+				Type piece;
+				switch (getSelectedEntity().getType()) {
+				case RED_TOWER:
+					piece = Type.RED_PIECE;
+					break;
+				case BLUE_TOWER:
+					piece = Type.BLUE_PIECE;
+					break;
+				case WHITE_TOWER:
+					piece = Type.WHITE_PIECE;
+					break;
+				// Should never happen
+				default:
+					piece = Type.UNCLAIMED_TOWER;
+				}
+				put(new BoardEntity(Type.UNCLAIMED_TOWER), getRow(getSelectedEntity()), getCol(getSelectedEntity()));
+				put(new BoardEntity(piece), row, col);
+			} else
+				put(getSelectedEntity(), row, col);
+			unselectEntity();
+			nextTurn();
+		}
 
 	}
 
