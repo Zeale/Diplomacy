@@ -1,13 +1,16 @@
 package org.alixia.games.diplomacy;
 
-import java.util.Stack;
+import org.alixia.games.diplomacy.Board.Team;
 
 import javafx.scene.Node;
-import javafx.scene.effect.Effect;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.paint.Color;
 
 public final class BoardEntity {
+
+	private static final DropShadow DEFAULT_SELECTION_EFFECT = new DropShadow(80, Color.GOLD);
 
 	/**
 	 * Used to determine if any arbitrarily obtained {@link ImageView} belongs to a
@@ -55,16 +58,36 @@ public final class BoardEntity {
 		return type;
 	}
 
-	private final Stack<Effect> effectQueue = new Stack<>();
+	private Team team;
+	private boolean selected;
 
-	public void setEffect(Effect effect) {
-		effectQueue.push(effect);
-		icon.setEffect(effectQueue.isEmpty() ? null : effectQueue.peek());
+	public void select() {
+		selected = true;
+		updateEffects();
 	}
 
-	public void removeEffect(Effect effect) {
-		effectQueue.remove(effect);
-		icon.setEffect(effectQueue.isEmpty() ? null : effectQueue.peek());
+	void selectTeam(Team team) {
+		this.team = team;
+		updateEffects();
+	}
+
+	void deselectTeam() {
+		team = null;
+		updateEffects();
+	}
+
+	void deselect() {
+		selected = false;
+		updateEffects();
+	}
+
+	private void updateEffects() {
+		if (selected)
+			icon.setEffect(DEFAULT_SELECTION_EFFECT);
+		else if (team != null)
+			icon.setEffect(team.getSelectionEffect());
+		else
+			icon.setEffect(null);
 	}
 
 }

@@ -13,7 +13,6 @@ import javafx.collections.ListChangeListener;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.Effect;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -21,9 +20,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 
 public final class Board extends Pane {
-
-	private static final DropShadow DEFAULT_SELECTION_EFFECT = new DropShadow(80, Color.GOLD);// Impl constant ~ see
-																								// below
 
 	private final Object BOARD_ENTITY_CLICK_EVENT_HANDLER_KEY = new Object();
 
@@ -45,8 +41,10 @@ public final class Board extends Pane {
 
 								EventHandler<MouseEvent> handler = event -> {
 									BoardEntity clickedEntity = BoardEntity.getBoardEntity(n);
-									if (event.getButton().equals(MouseButton.PRIMARY))
+									if (event.getButton().equals(MouseButton.PRIMARY)) {
 										handleEntityClicked(event, clickedEntity);
+										event.consume();
+									}
 								};
 								n.addEventFilter(MouseEvent.MOUSE_CLICKED, handler);
 
@@ -177,15 +175,19 @@ public final class Board extends Pane {
 
 	private Team currentTeam;
 
+	protected Team getCurrentTeam() {
+		return currentTeam;
+	}
+
 	protected void selectTeam(Team team) {
 		if (currentTeam != null)
 			for (BoardEntity be : getEntities())
 				if (be.getType() == currentTeam.boardEntityType)
-					be.removeEffect(currentTeam.selectionEffect);
+					be.deselectTeam();
 		currentTeam = team;
 		for (BoardEntity be : getEntities())
 			if (be.getType() == team.boardEntityType)
-				be.setEffect(team.selectionEffect);
+				be.selectTeam(team);
 	}
 
 	protected void nextTurn() {
@@ -196,10 +198,8 @@ public final class Board extends Pane {
 
 		Team[] teams = Team.values();
 		int point = currentTeam.ordinal();
-		if (point == teams.length)
-			point = 0;
 
-		selectTeam(teams[point]);
+		selectTeam(teams[point + 1 == teams.length ? 0 : point + 1]);
 	}
 
 	protected enum Team {
@@ -209,6 +209,10 @@ public final class Board extends Pane {
 
 		private final BoardEntity.Type boardEntityType;
 		private final DropShadow selectionEffect = new DropShadow();
+
+		public DropShadow getSelectionEffect() {
+			return selectionEffect;
+		}
 
 		{
 			selectionEffect.setRadius(80);
@@ -317,17 +321,13 @@ public final class Board extends Pane {
 	 * & stuff.
 	 */
 
-	protected Effect getSelectionEffect() {
-		return DEFAULT_SELECTION_EFFECT;
-	}
-
 	private BoardEntity selectedEntity;
 
 	protected BoardEntity selectEntity(BoardEntity entity) {
 		if (entity == selectedEntity)
 			return selectedEntity;
 		if (entity != null)
-			entity.setEffect(getSelectionEffect());
+			entity.select();
 
 		BoardEntity currEntity = unselectEntity();
 		selectedEntity = entity;
@@ -340,10 +340,14 @@ public final class Board extends Pane {
 
 	protected BoardEntity unselectEntity() {
 		if (selectedEntity != null)
-			selectedEntity.removeEffect(DEFAULT_SELECTION_EFFECT);
+			selectedEntity.deselect();
 		BoardEntity currEntity = selectedEntity;
 		selectedEntity = null;
 		return currEntity;
+	}
+
+	protected BoardEntity deselectEntity() {
+		return unselectEntity();
 	}
 
 	protected void handleEntityClicked(MouseEvent event, BoardEntity entity) {
@@ -354,8 +358,11 @@ public final class Board extends Pane {
 			if (isEntitySelected()) {
 				swap(getSelectedEntity(), entity);
 				unselectEntity();
-			} else
+				nextTurn();
+				System.out.println(currentTeam);
+			} else if (entity.getType() == getCurrentTeam().boardEntityType) {
 				selectEntity(entity);
+			}
 		}
 
 		// if(selectedEntity.getType()==Type.RED)// Or something better to get a type,
@@ -368,17 +375,16 @@ public final class Board extends Pane {
 	}
 
 	protected void handleBoardClicked(MouseEvent event, int row, int col) {
+
 		// Debug code
 		// System.out.println("Board Clicked @ [row=" + (row + 1) + ", col=" + (col + 1)
 		// + "]");
 
-		if (isEntitySelected() && getSelectedEntity() != getEntity(row, col))
+		if (isEntitySelected())
 			if (!hasEntity(row, col)) {
 				put(getSelectedEntity(), row, col);
 				unselectEntity();
-			} else {
-				swap(getSelectedEntity(), getEntity(row, col));
-				unselectEntity();
+				nextTurn();
 			}
 
 	}
